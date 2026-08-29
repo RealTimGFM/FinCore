@@ -1,0 +1,19 @@
+@FinCore.Api_HostAddress = https://localhost:7132
+
+### Create account
+
+POST {{FinCore.Api_HostAddress}}/api/accounts
+Content-Type: application/json
+
+{
+  "name": "TD Chequing",
+  "type": "Chequing",
+  "currency": "CAD"
+}
+
+###
+
+### Get all accounts
+
+GET {{FinCore.Api_HostAddress}}/api/accounts
+Accept: application/json
