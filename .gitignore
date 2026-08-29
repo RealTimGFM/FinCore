@@ -461,6 +461,8 @@ ehthumbs_vista.db
 
 # Dump file
 *.stackdump
+tempc#.py
+temp.txt
 
 # Folder config file
 [Dd]esktop.ini
