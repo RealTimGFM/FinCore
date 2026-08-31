@@ -15,6 +15,9 @@ public sealed class FinCoreDbContext
     public DbSet<Account> Accounts =>
         Set<Account>();
 
+    public DbSet<AccountStatusChange> AccountStatusChanges =>
+        Set<AccountStatusChange>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

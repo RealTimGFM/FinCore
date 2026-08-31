@@ -10,7 +10,12 @@ public sealed class AccountConfiguration
     public void Configure(
         EntityTypeBuilder<Account> builder)
     {
-        builder.ToTable("Accounts");
+        builder.ToTable(
+            "Accounts",
+            tableBuilder => tableBuilder.HasCheckConstraint(
+                "CK_Accounts_Status_ClosedAtUtc",
+                "([Status] = 'Active' AND [ClosedAtUtc] IS NULL) OR " +
+                "([Status] = 'Closed' AND [ClosedAtUtc] IS NOT NULL)"));
 
         builder.HasKey(account => account.Id);
 
@@ -28,6 +33,13 @@ public sealed class AccountConfiguration
             .IsFixedLength()
             .IsRequired();
 
+        builder.Property(account => account.Status)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(AccountStatus.Active)
+            .HasSentinel((AccountStatus)0)
+            .IsRequired();
+
         builder.Property(account => account.Balance)
             .HasPrecision(19, 4)
             .IsRequired();
@@ -38,6 +50,15 @@ public sealed class AccountConfiguration
         builder.Property(account => account.CreatedAtUtc)
             .IsRequired();
 
+        builder.Property(account => account.ClosedAtUtc);
+
+        builder.HasMany(account => account.StatusChanges)
+            .WithOne()
+            .HasForeignKey(statusChange => statusChange.AccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(account => account.Currency);
+
+        builder.HasIndex(account => account.Status);
     }
 }
