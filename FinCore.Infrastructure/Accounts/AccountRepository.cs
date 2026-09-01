@@ -28,11 +28,41 @@ public sealed class AccountRepository
     }
 
     public async Task<IReadOnlyList<Account>> GetAllAsync(
+        bool includeClosed,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Accounts.AsNoTracking();
+
+        if (!includeClosed)
+        {
+            query = query.Where(
+                account => account.Status == AccountStatus.Active);
+        }
+
+        return await query
+            .OrderBy(account => account.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Account?> GetByIdForUpdateAsync(
+        Guid id,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Accounts
+            .FirstOrDefaultAsync(
+                account => account.Id == id,
+                cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AccountStatusChange>> GetStatusHistoryAsync(
+        Guid accountId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.AccountStatusChanges
             .AsNoTracking()
-            .OrderBy(account => account.Name)
+            .Where(statusChange => statusChange.AccountId == accountId)
+            .OrderBy(statusChange => statusChange.ChangedAtUtc)
+            .ThenBy(statusChange => statusChange.Id)
             .ToListAsync(cancellationToken);
     }
 

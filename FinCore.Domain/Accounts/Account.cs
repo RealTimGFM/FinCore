@@ -2,6 +2,16 @@
 
 public sealed class Account
 {
+    private static readonly HashSet<string> SupportedCurrencies =
+        new(StringComparer.Ordinal)
+        {
+            "CAD",
+            "USD",
+            "VND"
+        };
+
+    private readonly List<AccountStatusChange> _statusChanges = [];
+
     public Guid Id { get; private set; }
 
     public string Name { get; private set; } = null!;
@@ -10,6 +20,8 @@ public sealed class Account
 
     public string Currency { get; private set; } = null!;
 
+    public AccountStatus Status { get; private set; }
+
     // Cached/materialized balance.
     // The ledger will eventually become the source of truth.
     public decimal Balance { get; private set; }
@@ -17,6 +29,11 @@ public sealed class Account
     public DateTimeOffset BalanceAsOfUtc { get; private set; }
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public DateTimeOffset? ClosedAtUtc { get; private set; }
+
+    public IReadOnlyCollection<AccountStatusChange> StatusChanges =>
+        _statusChanges.AsReadOnly();
 
     // Required by EF Core.
     private Account()
@@ -33,6 +50,9 @@ public sealed class Account
         Name = name;
         Type = type;
         Currency = currency;
+
+        Status = AccountStatus.Active;
+        ClosedAtUtc = null;
 
         Balance = 0m;
 
@@ -77,10 +97,10 @@ public sealed class Account
 
         currency = currency.Trim().ToUpperInvariant();
 
-        if (currency.Length != 3)
+        if (!SupportedCurrencies.Contains(currency))
         {
             throw new ArgumentException(
-                "Currency must use a 3-letter code such as CAD or USD.",
+                "Currency must be one of the supported currencies: CAD, USD, or VND.",
                 nameof(currency));
         }
 
@@ -118,5 +138,91 @@ public sealed class Account
     {
         Balance = balance;
         BalanceAsOfUtc = asOfUtc;
+    }
+
+    public void Close(
+        string reason,
+        AccountStatusChangeSource source)
+    {
+        if (Status != AccountStatus.Active)
+        {
+            throw new InvalidOperationException(
+                "Only an active account can be closed.");
+        }
+
+        reason = ValidateReason(reason);
+        ValidateSource(source);
+
+        var changedAtUtc = DateTimeOffset.UtcNow;
+
+        Status = AccountStatus.Closed;
+        ClosedAtUtc = changedAtUtc;
+
+        _statusChanges.Add(AccountStatusChange.Create(
+            Id,
+            AccountStatus.Active,
+            AccountStatus.Closed,
+            reason,
+            source,
+            changedAtUtc));
+    }
+
+    public void Reopen(
+        string reason,
+        AccountStatusChangeSource source)
+    {
+        if (Status != AccountStatus.Closed)
+        {
+            throw new InvalidOperationException(
+                "Only a closed account can be reopened.");
+        }
+
+        reason = ValidateReason(reason);
+        ValidateSource(source);
+
+        var changedAtUtc = DateTimeOffset.UtcNow;
+
+        Status = AccountStatus.Active;
+        ClosedAtUtc = null;
+
+        _statusChanges.Add(AccountStatusChange.Create(
+            Id,
+            AccountStatus.Closed,
+            AccountStatus.Active,
+            reason,
+            source,
+            changedAtUtc));
+    }
+
+    private static string ValidateReason(string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException(
+                "A reason is required.",
+                nameof(reason));
+        }
+
+        reason = reason.Trim();
+
+        if (reason.Length > 250)
+        {
+            throw new ArgumentException(
+                "Reason cannot exceed 250 characters.",
+                nameof(reason));
+        }
+
+        return reason;
+    }
+
+    private static void ValidateSource(
+        AccountStatusChangeSource source)
+    {
+        if (!Enum.IsDefined(source))
+        {
+            throw new ArgumentException(
+                "Invalid account status change source.",
+                nameof(source));
+        }
     }
 }

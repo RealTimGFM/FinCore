@@ -7,7 +7,9 @@ public sealed record AccountDto(
     string Name,
     AccountType Type,
     string Currency,
+    AccountStatus Status,
     decimal Balance,
     DateTimeOffset BalanceAsOfUtc,
-    DateTimeOffset CreatedAtUtc
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? ClosedAtUtc
 );

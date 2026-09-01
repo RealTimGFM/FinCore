@@ -1,4 +1,5 @@
 @FinCore.Api_HostAddress = https://localhost:7132
+@AccountId = 00000000-0000-0000-0000-000000000000
 
 ### Create account
 
@@ -13,7 +14,61 @@ Content-Type: application/json
 
 ###
 
-### Get all accounts
+### Get active accounts
 
 GET {{FinCore.Api_HostAddress}}/api/accounts
+Accept: application/json
+
+###
+
+### Get active and closed accounts
+
+GET {{FinCore.Api_HostAddress}}/api/accounts?includeClosed=true
+Accept: application/json
+
+###
+
+### Get account by ID
+
+GET {{FinCore.Api_HostAddress}}/api/accounts/{{AccountId}}
+Accept: application/json
+
+###
+
+### Rename account
+
+PATCH {{FinCore.Api_HostAddress}}/api/accounts/{{AccountId}}/name
+Content-Type: application/json
+
+{
+  "name": "TD Everyday Chequing"
+}
+
+###
+
+### Close account
+
+POST {{FinCore.Api_HostAddress}}/api/accounts/{{AccountId}}/close
+Content-Type: application/json
+
+{
+  "reason": "I closed this bank account."
+}
+
+###
+
+### Reopen account
+
+POST {{FinCore.Api_HostAddress}}/api/accounts/{{AccountId}}/reopen
+Content-Type: application/json
+
+{
+  "reason": "I closed this account in FinCore by mistake."
+}
+
+###
+
+### Get account status history
+
+GET {{FinCore.Api_HostAddress}}/api/accounts/{{AccountId}}/status-history
 Accept: application/json

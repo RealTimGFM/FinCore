@@ -8,7 +8,16 @@ public interface IAccountRepository
         Guid id,
         CancellationToken cancellationToken = default);
 
+    Task<Account?> GetByIdForUpdateAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Account>> GetAllAsync(
+        bool includeClosed,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AccountStatusChange>> GetStatusHistoryAsync(
+        Guid accountId,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(

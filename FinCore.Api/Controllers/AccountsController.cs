@@ -1,5 +1,6 @@
 ﻿using FinCore.Api.Contracts.Accounts;
 using FinCore.Application.Accounts;
+using FinCore.Domain.Accounts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinCore.Api.Controllers;
@@ -47,10 +48,12 @@ public sealed class AccountsController
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<AccountDto>>> GetAll(
+        [FromQuery] bool includeClosed,
         CancellationToken cancellationToken)
     {
         var accounts =
             await _accountService.GetAllAsync(
+                includeClosed,
                 cancellationToken);
 
         return Ok(accounts);
@@ -72,5 +75,98 @@ public sealed class AccountsController
         }
 
         return Ok(account);
+    }
+
+    [HttpPatch("{id:guid}/name")]
+    public async Task<ActionResult<AccountDto>> Rename(
+        Guid id,
+        RenameAccountRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var account = await _accountService.RenameAsync(
+                id,
+                request.Name,
+                cancellationToken);
+
+            return account is null
+                ? NotFound()
+                : Ok(account);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/close")]
+    public async Task<ActionResult<AccountDto>> Close(
+        Guid id,
+        CloseAccountRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var account = await _accountService.CloseAsync(
+                id,
+                request.Reason,
+                AccountStatusChangeSource.User,
+                cancellationToken);
+
+            return account is null
+                ? NotFound()
+                : Ok(account);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/reopen")]
+    public async Task<ActionResult<AccountDto>> Reopen(
+        Guid id,
+        ReopenAccountRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var account = await _accountService.ReopenAsync(
+                id,
+                request.Reason,
+                AccountStatusChangeSource.User,
+                cancellationToken);
+
+            return account is null
+                ? NotFound()
+                : Ok(account);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    [HttpGet("{id:guid}/status-history")]
+    public async Task<ActionResult<IReadOnlyList<AccountStatusChangeDto>>> GetStatusHistory(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var statusHistory = await _accountService.GetStatusHistoryAsync(
+            id,
+            cancellationToken);
+
+        return statusHistory is null
+            ? NotFound()
+            : Ok(statusHistory);
     }
 }
