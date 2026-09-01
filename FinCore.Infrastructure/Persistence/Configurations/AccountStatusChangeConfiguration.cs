@@ -13,6 +13,8 @@ public sealed class AccountStatusChangeConfiguration
         builder.ToTable("AccountStatusChanges");
 
         builder.HasKey(statusChange => statusChange.Id);
+        builder.Property(statusChange => statusChange.Id)
+            .ValueGeneratedNever();
 
         builder.Property(statusChange => statusChange.FromStatus)
             .HasConversion<string>()
