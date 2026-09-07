@@ -1,14 +1,20 @@
 ﻿using FinCore.Domain.Accounts;
 
+using FinCore.Application.Common.Persistence;
+
 namespace FinCore.Application.Accounts;
 
 public sealed class AccountService
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AccountService(IAccountRepository accountRepository)
+    public AccountService(
+        IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork)
     {
         _accountRepository = accountRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<AccountDto> CreateAsync(
@@ -24,7 +30,7 @@ public sealed class AccountService
             account,
             cancellationToken);
 
-        await _accountRepository.SaveChangesAsync(
+        await _unitOfWork.SaveChangesAsync(
             cancellationToken);
 
         return Map(account);
@@ -72,7 +78,7 @@ public sealed class AccountService
 
         account.Rename(newName);
 
-        await _accountRepository.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Map(account);
     }
@@ -94,7 +100,7 @@ public sealed class AccountService
 
         account.Close(reason, source);
 
-        await _accountRepository.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Map(account);
     }
@@ -116,7 +122,7 @@ public sealed class AccountService
 
         account.Reopen(reason, source);
 
-        await _accountRepository.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Map(account);
     }

@@ -1,4 +1,5 @@
 ﻿using FinCore.Domain.Accounts;
+using FinCore.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinCore.Infrastructure.Persistence;
@@ -17,6 +18,9 @@ public sealed class FinCoreDbContext
 
     public DbSet<AccountStatusChange> AccountStatusChanges =>
         Set<AccountStatusChange>();
+
+    public DbSet<Transaction> Transactions =>
+        Set<Transaction>();
 
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)

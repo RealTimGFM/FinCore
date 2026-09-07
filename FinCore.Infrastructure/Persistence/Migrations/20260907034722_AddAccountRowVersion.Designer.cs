@@ -4,6 +4,7 @@ using FinCore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinCore.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FinCoreDbContext))]
-    partial class FinCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260907034722_AddAccountRowVersion")]
+    partial class AddAccountRowVersion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,52 +123,10 @@ namespace FinCore.Infrastructure.Persistence.Migrations
                     b.ToTable("AccountStatusChanges", (string)null);
                 });
 
-            modelBuilder.Entity("FinCore.Domain.Transactions.Transaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(19, 4)
-                        .HasColumnType("decimal(19,4)");
-
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTimeOffset>("OccurredAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId", "OccurredAtUtc");
-
-                    b.ToTable("Transactions", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_Transactions_Amount_NotZero", "[Amount] <> 0");
-                        });
-                });
-
             modelBuilder.Entity("FinCore.Domain.Accounts.AccountStatusChange", b =>
                 {
                     b.HasOne("FinCore.Domain.Accounts.Account", null)
                         .WithMany("StatusChanges")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("FinCore.Domain.Transactions.Transaction", b =>
-                {
-                    b.HasOne("FinCore.Domain.Accounts.Account", null)
-                        .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

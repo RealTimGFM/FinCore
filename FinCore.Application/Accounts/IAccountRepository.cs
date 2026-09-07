@@ -23,7 +23,4 @@ public interface IAccountRepository
     Task AddAsync(
         Account account,
         CancellationToken cancellationToken = default);
-
-    Task SaveChangesAsync(
-        CancellationToken cancellationToken = default);
 }

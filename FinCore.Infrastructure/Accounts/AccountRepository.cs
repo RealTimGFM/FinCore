@@ -74,11 +74,4 @@ public sealed class AccountRepository
             account,
             cancellationToken);
     }
-
-    public async Task SaveChangesAsync(
-        CancellationToken cancellationToken = default)
-    {
-        await _dbContext.SaveChangesAsync(
-            cancellationToken);
-    }
 }

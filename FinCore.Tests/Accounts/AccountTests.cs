@@ -213,4 +213,50 @@ public sealed class AccountTests
 
         return account;
     }
+    [Fact]
+    public void ApplyTransaction_PositiveAmountIncreasesBalance()
+    {
+        var account = CreateAccount();
+
+        account.ApplyTransaction(
+            100m,
+            DateTimeOffset.UtcNow);
+
+        Assert.Equal(100m, account.Balance);
+    }
+    [Fact]
+    public void ApplyTransaction_NegativeAmountDecreasesBalance()
+    {
+        var account = CreateAccount();
+
+        account.ApplyTransaction(
+            100m,
+            DateTimeOffset.UtcNow);
+
+        account.ApplyTransaction(
+            -25m,
+            DateTimeOffset.UtcNow);
+
+        Assert.Equal(75m, account.Balance);
+    }
+    [Fact]
+    public void ApplyTransaction_ClosedAccountFails()
+    {
+        var account = CreateClosedAccount();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            account.ApplyTransaction(
+                -25m,
+                DateTimeOffset.UtcNow));
+    }
+    [Fact]
+    public void ApplyTransaction_ZeroAmountFails()
+    {
+        var account = CreateAccount();
+
+        Assert.Throws<ArgumentException>(() =>
+            account.ApplyTransaction(
+                0m,
+                DateTimeOffset.UtcNow));
+    }
 }

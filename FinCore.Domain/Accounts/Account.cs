@@ -11,7 +11,7 @@ public sealed class Account
         };
 
     private readonly List<AccountStatusChange> _statusChanges = [];
-
+    public byte[] RowVersion { get; private set; } = [];
     public Guid Id { get; private set; }
 
     public string Name { get; private set; } = null!;
@@ -224,5 +224,26 @@ public sealed class Account
                 "Invalid account status change source.",
                 nameof(source));
         }
+    }
+
+    public void ApplyTransaction(
+    decimal amount,
+    DateTimeOffset appliedAtUtc)
+    {
+        if (Status != AccountStatus.Active)
+        {
+            throw new InvalidOperationException(
+                "Transactions cannot be added to a closed account.");
+        }
+
+        if (amount == 0m)
+        {
+            throw new ArgumentException(
+                "Transaction amount cannot be zero.",
+                nameof(amount));
+        }
+
+        Balance += amount;
+        BalanceAsOfUtc = appliedAtUtc;
     }
 }
