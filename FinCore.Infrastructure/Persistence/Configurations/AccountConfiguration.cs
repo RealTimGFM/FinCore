@@ -52,6 +52,9 @@ public sealed class AccountConfiguration
 
         builder.Property(account => account.ClosedAtUtc);
 
+        builder.Property(account => account.RowVersion)
+    .IsRowVersion();
+
         builder.HasMany(account => account.StatusChanges)
             .WithOne()
             .HasForeignKey(statusChange => statusChange.AccountId)

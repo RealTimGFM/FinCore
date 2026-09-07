@@ -2,6 +2,7 @@
 using FinCore.Application.Accounts;
 using FinCore.Domain.Accounts;
 using Microsoft.AspNetCore.Mvc;
+using FinCore.Application.Common;
 
 namespace FinCore.Api.Controllers;
 
@@ -98,6 +99,10 @@ public sealed class AccountsController
         {
             return BadRequest(new { error = exception.Message });
         }
+        catch (ConcurrencyConflictException exception)
+        {
+            return Conflict(new { error = exception.Message });
+        }
     }
 
     [HttpPost("{id:guid}/close")]
@@ -126,6 +131,10 @@ public sealed class AccountsController
         {
             return BadRequest(new { error = exception.Message });
         }
+        catch (ConcurrencyConflictException exception)
+        {
+            return Conflict(new { error = exception.Message });
+        }
     }
 
     [HttpPost("{id:guid}/reopen")]
@@ -153,6 +162,10 @@ public sealed class AccountsController
         catch (InvalidOperationException exception)
         {
             return BadRequest(new { error = exception.Message });
+        }
+        catch (ConcurrencyConflictException exception)
+        {
+            return Conflict(new { error = exception.Message });
         }
     }
 

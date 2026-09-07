@@ -1,6 +1,9 @@
 using FinCore.Application.Accounts;
+using FinCore.Application.Common.Persistence;
+using FinCore.Application.Transactions;
 using FinCore.Infrastructure.Accounts;
 using FinCore.Infrastructure.Persistence;
+using FinCore.Infrastructure.Transactions;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,7 +34,16 @@ builder.Services.AddScoped<
     IAccountRepository,
     AccountRepository>();
 
+builder.Services.AddScoped<
+    ITransactionRepository,
+    TransactionRepository>();
+
+builder.Services.AddScoped<
+    IUnitOfWork,
+    EfUnitOfWork>();
+
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<TransactionService>();
 
 var app = builder.Build();
 
