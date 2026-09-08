@@ -55,6 +55,67 @@ public sealed class TransactionService
         return Map(transaction);
     }
 
+    public async Task<TransactionDto?> ReverseAsync(
+        ReverseTransactionCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var original =
+            await _transactionRepository.GetByIdAsync(
+                command.TransactionId,
+                cancellationToken);
+
+        if (original is null)
+        {
+            return null;
+        }
+
+        if (original.IsReversal)
+        {
+            throw new InvalidOperationException(
+                "A reversal transaction cannot itself be reversed.");
+        }
+
+        var alreadyReversed =
+            await _transactionRepository.HasReversalAsync(
+                original.Id,
+                cancellationToken);
+
+        if (alreadyReversed)
+        {
+            throw new InvalidOperationException(
+                "This transaction has already been reversed.");
+        }
+
+        var account =
+            await _accountRepository.GetByIdForUpdateAsync(
+                original.AccountId,
+                cancellationToken);
+
+        if (account is null)
+        {
+            throw new InvalidOperationException(
+                "The account for this transaction no longer exists.");
+        }
+
+        var reversal = Transaction.CreateReversal(
+            original,
+            command.Description,
+            command.OccurredAtUtc);
+
+        account.ApplyTransaction(
+            reversal.Amount,
+            reversal.CreatedAtUtc);
+
+        await _transactionRepository.AddAsync(
+            reversal,
+            cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(
+            cancellationToken);
+
+        return Map(reversal);
+    }
+
     public async Task<TransactionDto?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default)
@@ -128,6 +189,8 @@ public sealed class TransactionService
             transaction.Amount,
             transaction.Description,
             transaction.OccurredAtUtc,
-            transaction.CreatedAtUtc);
+            transaction.CreatedAtUtc,
+            transaction.ReversalOfTransactionId,
+            transaction.IsReversal);
     }
 }

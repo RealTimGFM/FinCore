@@ -4,6 +4,7 @@ using FinCore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinCore.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FinCoreDbContext))]
-    partial class FinCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260907223936_AddTransactionReversals")]
+    partial class AddTransactionReversals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

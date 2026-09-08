@@ -71,6 +71,58 @@ public sealed class TransactionsController
         }
     }
 
+    [HttpPost("{id:guid}/reverse")]
+    public async Task<ActionResult<TransactionDto>> Reverse(
+        Guid id,
+        ReverseTransactionRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var reversal =
+                await _transactionService.ReverseAsync(
+                    new ReverseTransactionCommand(
+                        id,
+                        request.Description,
+                        request.OccurredAtUtc),
+                    cancellationToken);
+
+            if (reversal is null)
+            {
+                return NotFound(new
+                {
+                    error = "Transaction was not found."
+                });
+            }
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = reversal.Id },
+                reversal);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new
+            {
+                error = exception.Message
+            });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new
+            {
+                error = exception.Message
+            });
+        }
+        catch (ConcurrencyConflictException exception)
+        {
+            return Conflict(new
+            {
+                error = exception.Message
+            });
+        }
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<TransactionDto>> GetById(
         Guid id,

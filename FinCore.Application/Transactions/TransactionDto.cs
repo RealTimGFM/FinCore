@@ -6,4 +6,6 @@ public sealed record TransactionDto(
     decimal Amount,
     string Description,
     DateTimeOffset OccurredAtUtc,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    Guid? ReversalOfTransactionId,
+    bool IsReversal);
