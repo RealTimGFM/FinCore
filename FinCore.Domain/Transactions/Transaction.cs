@@ -19,6 +19,16 @@ public sealed class Transaction
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
+    /// <summary>
+    /// If this transaction reverses another transaction,
+    /// this contains the original transaction's ID.
+    /// Otherwise null.
+    /// </summary>
+    public Guid? ReversalOfTransactionId { get; private set; }
+
+    public bool IsReversal =>
+        ReversalOfTransactionId.HasValue;
+
     // Required by EF Core.
     private Transaction()
     {
@@ -30,7 +40,8 @@ public sealed class Transaction
         decimal amount,
         string description,
         DateTimeOffset occurredAtUtc,
-        DateTimeOffset createdAtUtc)
+        DateTimeOffset createdAtUtc,
+        Guid? reversalOfTransactionId)
     {
         Id = id;
         AccountId = accountId;
@@ -38,6 +49,7 @@ public sealed class Transaction
         Description = description;
         OccurredAtUtc = occurredAtUtc;
         CreatedAtUtc = createdAtUtc;
+        ReversalOfTransactionId = reversalOfTransactionId;
     }
 
     public static Transaction Create(
@@ -60,6 +72,49 @@ public sealed class Transaction
                 nameof(amount));
         }
 
+        description = ValidateDescription(
+            description);
+
+        return new Transaction(
+            Guid.NewGuid(),
+            accountId,
+            amount,
+            description,
+            occurredAtUtc,
+            DateTimeOffset.UtcNow,
+            null);
+    }
+
+    public static Transaction CreateReversal(
+        Transaction originalTransaction,
+        string description,
+        DateTimeOffset occurredAtUtc)
+    {
+        ArgumentNullException.ThrowIfNull(
+            originalTransaction);
+
+        if (originalTransaction.IsReversal)
+        {
+            throw new InvalidOperationException(
+                "A reversal transaction cannot itself be reversed.");
+        }
+
+        description = ValidateDescription(
+            description);
+
+        return new Transaction(
+            Guid.NewGuid(),
+            originalTransaction.AccountId,
+            -originalTransaction.Amount,
+            description,
+            occurredAtUtc,
+            DateTimeOffset.UtcNow,
+            originalTransaction.Id);
+    }
+
+    private static string ValidateDescription(
+        string description)
+    {
         if (string.IsNullOrWhiteSpace(description))
         {
             throw new ArgumentException(
@@ -76,12 +131,6 @@ public sealed class Transaction
                 nameof(description));
         }
 
-        return new Transaction(
-            Guid.NewGuid(),
-            accountId,
-            amount,
-            description,
-            occurredAtUtc,
-            DateTimeOffset.UtcNow);
+        return description;
     }
 }

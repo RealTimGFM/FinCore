@@ -18,6 +18,10 @@ public interface ITransactionRepository
         Guid accountId,
         CancellationToken cancellationToken = default);
 
+    Task<bool> HasReversalAsync(
+        Guid transactionId,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         Transaction transaction,
         CancellationToken cancellationToken = default);

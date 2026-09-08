@@ -58,6 +58,19 @@ public sealed class TransactionRepository
                 cancellationToken);
     }
 
+    public async Task<bool> HasReversalAsync(
+        Guid transactionId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Transactions
+            .AsNoTracking()
+            .AnyAsync(
+                transaction =>
+                    transaction.ReversalOfTransactionId ==
+                    transactionId,
+                cancellationToken);
+    }
+
     public async Task AddAsync(
         Transaction transaction,
         CancellationToken cancellationToken = default)

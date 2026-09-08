@@ -40,9 +40,18 @@ public sealed class TransactionConfiguration
         builder.Property(transaction => transaction.CreatedAtUtc)
             .IsRequired();
 
+        builder.Property(transaction =>
+            transaction.ReversalOfTransactionId);
+
         builder.HasOne<Account>()
             .WithMany()
             .HasForeignKey(transaction => transaction.AccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Transaction>()
+            .WithMany()
+            .HasForeignKey(transaction =>
+                transaction.ReversalOfTransactionId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(transaction => new
@@ -50,5 +59,11 @@ public sealed class TransactionConfiguration
             transaction.AccountId,
             transaction.OccurredAtUtc
         });
+
+        builder.HasIndex(transaction =>
+                transaction.ReversalOfTransactionId)
+            .IsUnique()
+            .HasFilter(
+                "[ReversalOfTransactionId] IS NOT NULL");
     }
 }
