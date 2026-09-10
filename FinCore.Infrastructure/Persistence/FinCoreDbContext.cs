@@ -22,6 +22,9 @@ public sealed class FinCoreDbContext
     public DbSet<Transaction> Transactions =>
         Set<Transaction>();
 
+    public DbSet<IdempotencyRecord> IdempotencyRecords =>
+        Set<IdempotencyRecord>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

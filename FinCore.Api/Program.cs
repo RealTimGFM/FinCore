@@ -2,6 +2,7 @@ using FinCore.Application.Accounts;
 using FinCore.Application.Common.Persistence;
 using FinCore.Application.Transactions;
 using FinCore.Infrastructure.Accounts;
+using FinCore.Infrastructure.Idempotency;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
 using System.Text.Json.Serialization;
@@ -44,6 +45,7 @@ builder.Services.AddScoped<
 
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<TransactionService>();
+builder.Services.AddScoped<IdempotencyService>();
 
 var app = builder.Build();
 

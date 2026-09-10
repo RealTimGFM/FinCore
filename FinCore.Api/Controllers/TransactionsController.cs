@@ -2,6 +2,7 @@ using FinCore.Api.Contracts.Transactions;
 using FinCore.Application.Common;
 using FinCore.Application.Common.Pagination;
 using FinCore.Application.Transactions;
+using FinCore.Infrastructure.Idempotency;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinCore.Api.Controllers;
@@ -11,42 +12,70 @@ namespace FinCore.Api.Controllers;
 public sealed class TransactionsController
     : ControllerBase
 {
+    private readonly IdempotencyService _idempotencyService;
     private readonly TransactionService _transactionService;
 
     public TransactionsController(
+        IdempotencyService idempotencyService,
         TransactionService transactionService)
     {
+        _idempotencyService = idempotencyService;
         _transactionService = transactionService;
     }
 
     [HttpPost]
     public async Task<ActionResult<TransactionDto>> Create(
         CreateTransactionRequest request,
+        [FromHeader(Name = "Idempotency-Key")]
+        string? idempotencyKey,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return BadRequest(new
+            {
+                error = "Idempotency-Key header is required."
+            });
+        }
+
         try
         {
-            var transaction =
-                await _transactionService.CreateAsync(
-                    new CreateTransactionCommand(
-                        request.AccountId,
-                        request.Amount,
-                        request.Description,
-                        request.OccurredAtUtc),
+            var result =
+                await _idempotencyService.ExecuteAsync<
+                    CreateTransactionRequest,
+                    TransactionDto>(
+                    idempotencyKey,
+                    request,
+                    async () =>
+                        await _transactionService.CreateAsync(
+                            new CreateTransactionCommand(
+                                request.AccountId,
+                                request.Amount,
+                                request.Description,
+                                request.OccurredAtUtc),
+                            cancellationToken)
+                        ?? throw new KeyNotFoundException(
+                            "Account was not found."),
+                    StatusCodes.Status201Created,
                     cancellationToken);
 
-            if (transaction is null)
+            return StatusCode(
+                result.StatusCode,
+                result.Value);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new
             {
-                return NotFound(new
-                {
-                    error = "Account was not found."
-                });
-            }
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = transaction.Id },
-                transaction);
+                error = exception.Message
+            });
+        }
+        catch (IdempotencyKeyReuseException exception)
+        {
+            return Conflict(new
+            {
+                error = exception.Message
+            });
         }
         catch (ArgumentException exception)
         {
