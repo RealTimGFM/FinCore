@@ -5,6 +5,7 @@ using FinCore.Application.Transactions;
 using FinCore.Domain.Accounts;
 using FinCore.Domain.Transactions;
 using FinCore.Infrastructure.Accounts;
+using FinCore.Infrastructure.Categories;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
 using Microsoft.Data.SqlClient;
@@ -98,6 +99,7 @@ public sealed class TransactionReversalTests
                     new TransactionService(
                         accountRepository,
                         transactionRepository,
+                        new CategoryRepository(reversalContext),
                         unitOfWork);
 
                 var reversal =
@@ -514,6 +516,7 @@ public sealed class TransactionReversalTests
                 new CoordinatedTransactionRepository(
                     new TransactionRepository(winnerContext),
                     bothChecked),
+                new CategoryRepository(winnerContext),
                 new SignalingUnitOfWork(
                     new EfUnitOfWork(winnerContext),
                     winnerCommitted));
@@ -525,6 +528,7 @@ public sealed class TransactionReversalTests
                 new CoordinatedTransactionRepository(
                     new TransactionRepository(loserContext),
                     bothChecked),
+                new CategoryRepository(loserContext),
                 new WaitingUnitOfWork(
                     new EfUnitOfWork(loserContext),
                     winnerCommitted.Task));
@@ -594,6 +598,7 @@ public sealed class TransactionReversalTests
                 new CoordinatedTransactionRepository(
                     new TransactionRepository(winnerContext),
                     bothChecked),
+                new CategoryRepository(winnerContext),
                 new SignalingUnitOfWork(
                     new EfUnitOfWork(winnerContext),
                     winnerCommitted));
@@ -605,6 +610,7 @@ public sealed class TransactionReversalTests
                 new CoordinatedTransactionRepository(
                     new TransactionRepository(loserContext),
                     bothChecked),
+                new CategoryRepository(loserContext),
                 new EfUnitOfWork(loserContext));
 
             var loserTask = loserService.ReverseAsync(
@@ -715,6 +721,7 @@ public sealed class TransactionReversalTests
         return new TransactionService(
             new AccountRepository(context),
             new TransactionRepository(context),
+            new CategoryRepository(context),
             new EfUnitOfWork(context));
     }
 
@@ -786,6 +793,11 @@ public sealed class TransactionReversalTests
             Guid id,
             CancellationToken cancellationToken = default) =>
             inner.GetByIdAsync(id, cancellationToken);
+
+        public Task<Transaction?> GetByIdForUpdateAsync(
+            Guid id,
+            CancellationToken cancellationToken = default) =>
+            inner.GetByIdForUpdateAsync(id, cancellationToken);
 
         public Task<IReadOnlyList<Transaction>> GetByAccountIdAsync(
             Guid accountId,

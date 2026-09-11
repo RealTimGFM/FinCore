@@ -19,6 +19,8 @@ public sealed class Transaction
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
+    public Guid? CategoryId { get; private set; }
+
     /// <summary>
     /// If this transaction reverses another transaction,
     /// this contains the original transaction's ID.
@@ -41,7 +43,8 @@ public sealed class Transaction
         string description,
         DateTimeOffset occurredAtUtc,
         DateTimeOffset createdAtUtc,
-        Guid? reversalOfTransactionId)
+        Guid? reversalOfTransactionId,
+        Guid? categoryId)
     {
         Id = id;
         AccountId = accountId;
@@ -50,6 +53,7 @@ public sealed class Transaction
         OccurredAtUtc = occurredAtUtc;
         CreatedAtUtc = createdAtUtc;
         ReversalOfTransactionId = reversalOfTransactionId;
+        CategoryId = categoryId;
     }
 
     public static Transaction Create(
@@ -82,6 +86,7 @@ public sealed class Transaction
             description,
             occurredAtUtc,
             DateTimeOffset.UtcNow,
+            null,
             null);
     }
 
@@ -109,7 +114,13 @@ public sealed class Transaction
             description,
             occurredAtUtc,
             DateTimeOffset.UtcNow,
-            originalTransaction.Id);
+            originalTransaction.Id,
+            originalTransaction.CategoryId);
+    }
+
+    public void SetCategory(Guid? categoryId)
+    {
+        CategoryId = categoryId;
     }
 
     private static string ValidateDescription(

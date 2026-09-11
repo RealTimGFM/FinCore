@@ -8,6 +8,10 @@ public interface ITransactionRepository
         Guid id,
         CancellationToken cancellationToken = default);
 
+    Task<Transaction?> GetByIdForUpdateAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Transaction>> GetByAccountIdAsync(
         Guid accountId,
         int skip,

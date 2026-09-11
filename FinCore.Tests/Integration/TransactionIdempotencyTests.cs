@@ -3,6 +3,7 @@ using FinCore.Application.Common;
 using FinCore.Application.Transactions;
 using FinCore.Domain.Accounts;
 using FinCore.Infrastructure.Accounts;
+using FinCore.Infrastructure.Categories;
 using FinCore.Infrastructure.Idempotency;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
@@ -395,6 +396,7 @@ public sealed class TransactionIdempotencyTests
         return new TransactionService(
             new AccountRepository(context),
             new TransactionRepository(context),
+            new CategoryRepository(context),
             new EfUnitOfWork(context));
     }
 

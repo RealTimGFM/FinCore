@@ -27,6 +27,16 @@ public sealed class TransactionRepository
                 cancellationToken);
     }
 
+    public async Task<Transaction?> GetByIdForUpdateAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Transactions
+            .FirstOrDefaultAsync(
+                transaction => transaction.Id == id,
+                cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Transaction>> GetByAccountIdAsync(
         Guid accountId,
         int skip,

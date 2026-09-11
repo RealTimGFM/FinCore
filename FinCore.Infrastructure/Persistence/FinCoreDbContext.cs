@@ -1,5 +1,6 @@
 ﻿using FinCore.Domain.Accounts;
 using FinCore.Domain.Transactions;
+using FinCore.Domain.Categories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinCore.Infrastructure.Persistence;
@@ -21,6 +22,9 @@ public sealed class FinCoreDbContext
 
     public DbSet<Transaction> Transactions =>
         Set<Transaction>();
+
+    public DbSet<Category> Categories =>
+        Set<Category>();
 
     public DbSet<IdempotencyRecord> IdempotencyRecords =>
         Set<IdempotencyRecord>();

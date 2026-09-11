@@ -167,6 +167,43 @@ public sealed class TransactionsController
             : Ok(transaction);
     }
 
+    [HttpPut("{id:guid}/category")]
+    public async Task<ActionResult<TransactionDto>> SetCategory(
+        Guid id,
+        SetTransactionCategoryRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var transaction =
+                await _transactionService.SetCategoryAsync(
+                    id,
+                    request.CategoryId,
+                    cancellationToken);
+
+            return transaction is null
+                ? NotFound(new
+                {
+                    error = "Transaction was not found."
+                })
+                : Ok(transaction);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new
+            {
+                error = exception.Message
+            });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new
+            {
+                error = exception.Message
+            });
+        }
+    }
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<TransactionDto>>> GetByAccount(
         [FromQuery] Guid accountId,

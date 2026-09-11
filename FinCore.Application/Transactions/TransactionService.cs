@@ -1,4 +1,5 @@
 using FinCore.Application.Accounts;
+using FinCore.Application.Categories;
 using FinCore.Application.Common.Pagination;
 using FinCore.Application.Common.Persistence;
 using FinCore.Domain.Transactions;
@@ -9,15 +10,18 @@ public sealed class TransactionService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public TransactionService(
         IAccountRepository accountRepository,
         ITransactionRepository transactionRepository,
+        ICategoryRepository categoryRepository,
         IUnitOfWork unitOfWork)
     {
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
+        _categoryRepository = categoryRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -130,6 +134,49 @@ public sealed class TransactionService
             : Map(transaction);
     }
 
+    public async Task<TransactionDto?> SetCategoryAsync(
+        Guid transactionId,
+        Guid? categoryId,
+        CancellationToken cancellationToken = default)
+    {
+        var transaction =
+            await _transactionRepository.GetByIdForUpdateAsync(
+                transactionId,
+                cancellationToken);
+
+        if (transaction is null)
+        {
+            return null;
+        }
+
+        if (categoryId.HasValue)
+        {
+            var category =
+                await _categoryRepository.GetByIdAsync(
+                    categoryId.Value,
+                    cancellationToken);
+
+            if (category is null)
+            {
+                throw new KeyNotFoundException(
+                    "Category was not found.");
+            }
+
+            if (category.IsArchived)
+            {
+                throw new InvalidOperationException(
+                    "An archived category cannot be assigned to a transaction.");
+            }
+        }
+
+        transaction.SetCategory(categoryId);
+
+        await _unitOfWork.SaveChangesAsync(
+            cancellationToken);
+
+        return Map(transaction);
+    }
+
     public async Task<PagedResult<TransactionDto>> GetByAccountIdAsync(
         Guid accountId,
         int page,
@@ -190,6 +237,7 @@ public sealed class TransactionService
             transaction.Description,
             transaction.OccurredAtUtc,
             transaction.CreatedAtUtc,
+            transaction.CategoryId,
             transaction.ReversalOfTransactionId,
             transaction.IsReversal);
     }

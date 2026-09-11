@@ -1,7 +1,9 @@
 using FinCore.Application.Accounts;
+using FinCore.Application.Categories;
 using FinCore.Application.Common.Persistence;
 using FinCore.Application.Transactions;
 using FinCore.Infrastructure.Accounts;
+using FinCore.Infrastructure.Categories;
 using FinCore.Infrastructure.Idempotency;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
@@ -40,10 +42,15 @@ builder.Services.AddScoped<
     TransactionRepository>();
 
 builder.Services.AddScoped<
+    ICategoryRepository,
+    CategoryRepository>();
+
+builder.Services.AddScoped<
     IUnitOfWork,
     EfUnitOfWork>();
 
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<IdempotencyService>();
 

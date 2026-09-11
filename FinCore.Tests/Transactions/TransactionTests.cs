@@ -90,6 +90,28 @@ public sealed class TransactionTests
 
         Assert.False(transaction.IsReversal);
         Assert.Null(transaction.ReversalOfTransactionId);
+        Assert.Null(transaction.CategoryId);
+    }
+
+    [Fact]
+    public void SetCategory_DoesNotChangeAmount()
+    {
+        var transaction = Transaction.Create(
+            Guid.NewGuid(),
+            -8.99m,
+            "McDonald's",
+            DateTimeOffset.UtcNow);
+        var categoryId = Guid.NewGuid();
+
+        transaction.SetCategory(categoryId);
+
+        Assert.Equal(categoryId, transaction.CategoryId);
+        Assert.Equal(-8.99m, transaction.Amount);
+
+        transaction.SetCategory(null);
+
+        Assert.Null(transaction.CategoryId);
+        Assert.Equal(-8.99m, transaction.Amount);
     }
 
     [Fact]
@@ -168,6 +190,25 @@ public sealed class TransactionTests
         Assert.Equal(
             original.Id,
             reversal.ReversalOfTransactionId);
+    }
+
+    [Fact]
+    public void CreateReversal_CopiesOriginalCategory()
+    {
+        var original = Transaction.Create(
+            Guid.NewGuid(),
+            -25m,
+            "Groceries",
+            DateTimeOffset.UtcNow);
+        var categoryId = Guid.NewGuid();
+        original.SetCategory(categoryId);
+
+        var reversal = Transaction.CreateReversal(
+            original,
+            "Entered wrong amount",
+            DateTimeOffset.UtcNow);
+
+        Assert.Equal(categoryId, reversal.CategoryId);
     }
 
     [Fact]

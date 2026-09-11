@@ -1,5 +1,6 @@
 using FinCore.Domain.Accounts;
 using FinCore.Domain.Transactions;
+using FinCore.Domain.Categories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -43,6 +44,8 @@ public sealed class TransactionConfiguration
         builder.Property(transaction =>
             transaction.ReversalOfTransactionId);
 
+        builder.Property(transaction => transaction.CategoryId);
+
         builder.HasOne<Account>()
             .WithMany()
             .HasForeignKey(transaction => transaction.AccountId)
@@ -52,6 +55,11 @@ public sealed class TransactionConfiguration
             .WithMany()
             .HasForeignKey(transaction =>
                 transaction.ReversalOfTransactionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Category>()
+            .WithMany()
+            .HasForeignKey(transaction => transaction.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(transaction => new
@@ -65,5 +73,7 @@ public sealed class TransactionConfiguration
             .IsUnique()
             .HasFilter(
                 "[ReversalOfTransactionId] IS NOT NULL");
+
+        builder.HasIndex(transaction => transaction.CategoryId);
     }
 }

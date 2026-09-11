@@ -7,5 +7,6 @@ public sealed record TransactionDto(
     string Description,
     DateTimeOffset OccurredAtUtc,
     DateTimeOffset CreatedAtUtc,
+    Guid? CategoryId,
     Guid? ReversalOfTransactionId,
     bool IsReversal);
