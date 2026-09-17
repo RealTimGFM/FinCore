@@ -2,6 +2,8 @@ using FinCore.Application.Accounts;
 using FinCore.Application.Categories;
 using FinCore.Application.Common.Pagination;
 using FinCore.Application.Common.Persistence;
+using FinCore.Application.Merchants;
+using FinCore.Application.Transactions.Classification;
 using FinCore.Domain.Transactions;
 
 namespace FinCore.Application.Transactions;
@@ -11,17 +13,23 @@ public sealed class TransactionService
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly TransactionCategoryClassifier _categoryClassifier;
+    private readonly MerchantMemoryLearner _merchantMemoryLearner;
     private readonly IUnitOfWork _unitOfWork;
 
     public TransactionService(
         IAccountRepository accountRepository,
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
+        TransactionCategoryClassifier categoryClassifier,
+        MerchantMemoryLearner merchantMemoryLearner,
         IUnitOfWork unitOfWork)
     {
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
+        _categoryClassifier = categoryClassifier;
+        _merchantMemoryLearner = merchantMemoryLearner;
         _unitOfWork = unitOfWork;
     }
 
@@ -44,6 +52,15 @@ public sealed class TransactionService
             command.Amount,
             command.Description,
             command.OccurredAtUtc);
+
+        var classification = await _categoryClassifier.ClassifyAsync(
+            transaction.Description,
+            cancellationToken);
+
+        if (classification.CategoryId.HasValue)
+        {
+            transaction.SetCategory(classification.CategoryId.Value);
+        }
 
         account.ApplyTransaction(
             transaction.Amount,
@@ -170,6 +187,14 @@ public sealed class TransactionService
         }
 
         transaction.SetCategory(categoryId);
+
+        if (categoryId.HasValue && !transaction.IsReversal)
+        {
+            await _merchantMemoryLearner.LearnAsync(
+                transaction.Description,
+                categoryId.Value,
+                cancellationToken);
+        }
 
         await _unitOfWork.SaveChangesAsync(
             cancellationToken);

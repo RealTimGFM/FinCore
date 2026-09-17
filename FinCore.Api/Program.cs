@@ -1,10 +1,13 @@
 using FinCore.Application.Accounts;
 using FinCore.Application.Categories;
 using FinCore.Application.Common.Persistence;
+using FinCore.Application.Merchants;
 using FinCore.Application.Transactions;
+using FinCore.Application.Transactions.Classification;
 using FinCore.Infrastructure.Accounts;
 using FinCore.Infrastructure.Categories;
 using FinCore.Infrastructure.Idempotency;
+using FinCore.Infrastructure.Merchants;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
 using System.Text.Json.Serialization;
@@ -46,12 +49,19 @@ builder.Services.AddScoped<
     CategoryRepository>();
 
 builder.Services.AddScoped<
+    IMerchantMemoryRepository,
+    MerchantMemoryRepository>();
+
+builder.Services.AddScoped<
     IUnitOfWork,
     EfUnitOfWork>();
 
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<MerchantMemoryLearner>();
+builder.Services.AddScoped<MerchantMemoryService>();
 builder.Services.AddScoped<TransactionService>();
+builder.Services.AddScoped<TransactionCategoryClassifier>();
 builder.Services.AddScoped<IdempotencyService>();
 
 var app = builder.Build();

@@ -1,9 +1,12 @@
 using FinCore.Application.Accounts;
 using FinCore.Application.Common;
+using FinCore.Application.Merchants;
 using FinCore.Application.Transactions;
+using FinCore.Application.Transactions.Classification;
 using FinCore.Domain.Accounts;
 using FinCore.Infrastructure.Accounts;
 using FinCore.Infrastructure.Categories;
+using FinCore.Infrastructure.Merchants;
 using FinCore.Infrastructure.Idempotency;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
@@ -393,10 +396,18 @@ public sealed class TransactionIdempotencyTests
     private static TransactionService CreateTransactionService(
         FinCoreDbContext context)
     {
+        var categoryRepository = new CategoryRepository(context);
+        var merchantMemoryRepository = new MerchantMemoryRepository(context);
+        var classifier = new TransactionCategoryClassifier(
+            merchantMemoryRepository,
+            categoryRepository);
+
         return new TransactionService(
             new AccountRepository(context),
             new TransactionRepository(context),
-            new CategoryRepository(context),
+            categoryRepository,
+            classifier,
+            new MerchantMemoryLearner(merchantMemoryRepository),
             new EfUnitOfWork(context));
     }
 

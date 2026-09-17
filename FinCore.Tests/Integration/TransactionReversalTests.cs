@@ -1,11 +1,14 @@
 using FinCore.Application.Accounts;
 using FinCore.Application.Common;
 using FinCore.Application.Common.Persistence;
+using FinCore.Application.Merchants;
 using FinCore.Application.Transactions;
+using FinCore.Application.Transactions.Classification;
 using FinCore.Domain.Accounts;
 using FinCore.Domain.Transactions;
 using FinCore.Infrastructure.Accounts;
 using FinCore.Infrastructure.Categories;
+using FinCore.Infrastructure.Merchants;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
 using Microsoft.Data.SqlClient;
@@ -100,6 +103,8 @@ public sealed class TransactionReversalTests
                         accountRepository,
                         transactionRepository,
                         new CategoryRepository(reversalContext),
+                        CreateClassifier(reversalContext),
+                        CreateLearner(reversalContext),
                         unitOfWork);
 
                 var reversal =
@@ -517,6 +522,8 @@ public sealed class TransactionReversalTests
                     new TransactionRepository(winnerContext),
                     bothChecked),
                 new CategoryRepository(winnerContext),
+                CreateClassifier(winnerContext),
+                CreateLearner(winnerContext),
                 new SignalingUnitOfWork(
                     new EfUnitOfWork(winnerContext),
                     winnerCommitted));
@@ -529,6 +536,8 @@ public sealed class TransactionReversalTests
                     new TransactionRepository(loserContext),
                     bothChecked),
                 new CategoryRepository(loserContext),
+                CreateClassifier(loserContext),
+                CreateLearner(loserContext),
                 new WaitingUnitOfWork(
                     new EfUnitOfWork(loserContext),
                     winnerCommitted.Task));
@@ -599,6 +608,8 @@ public sealed class TransactionReversalTests
                     new TransactionRepository(winnerContext),
                     bothChecked),
                 new CategoryRepository(winnerContext),
+                CreateClassifier(winnerContext),
+                CreateLearner(winnerContext),
                 new SignalingUnitOfWork(
                     new EfUnitOfWork(winnerContext),
                     winnerCommitted));
@@ -611,6 +622,8 @@ public sealed class TransactionReversalTests
                     new TransactionRepository(loserContext),
                     bothChecked),
                 new CategoryRepository(loserContext),
+                CreateClassifier(loserContext),
+                CreateLearner(loserContext),
                 new EfUnitOfWork(loserContext));
 
             var loserTask = loserService.ReverseAsync(
@@ -718,11 +731,33 @@ public sealed class TransactionReversalTests
     private static TransactionService CreateTransactionService(
         FinCoreDbContext context)
     {
+        var categoryRepository = new CategoryRepository(context);
+        var merchantMemoryRepository = new MerchantMemoryRepository(context);
+
         return new TransactionService(
             new AccountRepository(context),
             new TransactionRepository(context),
-            new CategoryRepository(context),
+            categoryRepository,
+            new TransactionCategoryClassifier(
+                merchantMemoryRepository,
+                categoryRepository),
+            new MerchantMemoryLearner(merchantMemoryRepository),
             new EfUnitOfWork(context));
+    }
+
+    private static TransactionCategoryClassifier CreateClassifier(
+        FinCoreDbContext context)
+    {
+        return new TransactionCategoryClassifier(
+            new MerchantMemoryRepository(context),
+            new CategoryRepository(context));
+    }
+
+    private static MerchantMemoryLearner CreateLearner(
+        FinCoreDbContext context)
+    {
+        return new MerchantMemoryLearner(
+            new MerchantMemoryRepository(context));
     }
 
     private static DbContextOptions<FinCoreDbContext> CreateOptions(

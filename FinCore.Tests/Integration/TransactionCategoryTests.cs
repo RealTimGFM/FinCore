@@ -1,9 +1,12 @@
+using FinCore.Application.Merchants;
 using FinCore.Application.Transactions;
+using FinCore.Application.Transactions.Classification;
 using FinCore.Domain.Accounts;
 using FinCore.Domain.Categories;
 using FinCore.Domain.Transactions;
 using FinCore.Infrastructure.Accounts;
 using FinCore.Infrastructure.Categories;
+using FinCore.Infrastructure.Merchants;
 using FinCore.Infrastructure.Persistence;
 using FinCore.Infrastructure.Transactions;
 using Microsoft.Data.SqlClient;
@@ -420,10 +423,18 @@ public sealed class TransactionCategoryTests
     private static TransactionService CreateTransactionService(
         FinCoreDbContext context)
     {
+        var categoryRepository = new CategoryRepository(context);
+        var merchantMemoryRepository = new MerchantMemoryRepository(context);
+        var classifier = new TransactionCategoryClassifier(
+            merchantMemoryRepository,
+            categoryRepository);
+
         return new TransactionService(
             new AccountRepository(context),
             new TransactionRepository(context),
-            new CategoryRepository(context),
+            categoryRepository,
+            classifier,
+            new MerchantMemoryLearner(merchantMemoryRepository),
             new EfUnitOfWork(context));
     }
 
