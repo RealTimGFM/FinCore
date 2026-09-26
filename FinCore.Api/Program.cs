@@ -53,6 +53,10 @@ builder.Services.AddScoped<
     MerchantMemoryRepository>();
 
 builder.Services.AddScoped<
+    ISharedMerchantCatalogRepository,
+    SharedMerchantCatalogRepository>();
+
+builder.Services.AddScoped<
     IUnitOfWork,
     EfUnitOfWork>();
 
@@ -60,6 +64,7 @@ builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<MerchantMemoryLearner>();
 builder.Services.AddScoped<MerchantMemoryService>();
+builder.Services.AddScoped<MerchantResolver>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<TransactionCategoryClassifier>();
 builder.Services.AddScoped<IdempotencyService>();

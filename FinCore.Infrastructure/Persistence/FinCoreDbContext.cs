@@ -30,6 +30,12 @@ public sealed class FinCoreDbContext
     public DbSet<MerchantMemory> MerchantMemories =>
         Set<MerchantMemory>();
 
+    public DbSet<Merchant> Merchants =>
+        Set<Merchant>();
+
+    public DbSet<MerchantAlias> MerchantAliases =>
+        Set<MerchantAlias>();
+
     public DbSet<IdempotencyRecord> IdempotencyRecords =>
         Set<IdempotencyRecord>();
 
